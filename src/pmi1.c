@@ -28,14 +28,8 @@
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
-#include PMIX_EVENT_HEADER
 
 #define ANL_MAPPING "PMI_process_mapping"
-
-#include "src/mca/bfrops/bfrops.h"
-#include "src/util/argv.h"
-#include "src/util/error.h"
-#include "src/util/output.h"
 
 #define PMI_MAX_ID_LEN       PMIX_MAX_NSLEN  /* Maximim size of PMI process group ID */
 #define PMI_MAX_KEY_LEN      PMIX_MAX_KEYLEN /* Maximum size of a PMI key */
