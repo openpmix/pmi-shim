@@ -111,3 +111,6 @@ config/ltmain.sh
 config/config.*
 libtool
 */.libs/
+
+src/include/pmix_config.h*
+src/include/stamp-h1
