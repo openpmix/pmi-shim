@@ -67,6 +67,8 @@ AC_CHECK_HEADERS([string.h unistd.h stdlib.h])
 
 OPAL_CONFIGURE_SETUP
 OPAL_CHECK_PMIX
-m4_ifdef([project_ompi], [OMPI_CONFIGURE_OPTIONS])
+if test "$opal_external_pmix_happy" = "no"; then
+   AC_MSG_ERROR([could not find PMIx])
+fi
 
 AC_OUTPUT
