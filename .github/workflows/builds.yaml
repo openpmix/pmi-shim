@@ -1,0 +1,71 @@
+name: Build tests
+
+on: [pull_request]
+
+jobs:
+  macos:
+    runs-on: macos-latest
+    strategy:
+      matrix:
+        path: ['non-vpath', 'vpath']
+    steps:
+    - name: Install dependencies
+      run: brew install libevent hwloc autoconf automake libtool
+    - name: Git clone OpenPMIx
+      uses: actions/checkout@v3
+      with:
+            submodules: recursive
+    - name: Build OpenPMIx
+      run: |
+        ./autogen.pl
+
+        ./configure --prefix=${PWD}/install
+        make -j
+        make install
+    - name: Build PMI shim
+      run: |
+        ./autogen.sh
+
+        if test "${{ matrix.path }}" = vpath; then
+            mkdir build
+            cd build
+            ../configure --prefix=${PWD}/shim --with-pmix=${PWD}/install
+        else
+            ./configure --prefix=${PWD}/shim --with-pmix=${PWD}/install
+        fi
+        make -j
+        make install
+        make uninstall
+
+  ubuntu:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        path: ['non-vpath', 'vpath']
+    steps:
+    - name: Install dependencies
+      run: |
+        sudo apt-get update
+        sudo apt-get install -y --no-install-recommends software-properties-common libhwloc-dev libevent-dev
+    - name: Build OpenPMIx
+      run: |
+        ./autogen.pl
+
+        ./configure --prefix=${PWD}/install
+        make -j
+        make install
+    - name: Build PMI shim
+      run: |
+        ./autogen.sh
+
+        if test "${{ matrix.path }}" = vpath; then
+            mkdir build
+            cd build
+            ../configure --prefix=${PWD}/shim --with-pmix=${PWD}/install
+        else
+            ./configure --prefix=${PWD}/shim --with-pmix=${PWD}/install
+        fi
+        make -j
+        make install
+        make uninstall
+

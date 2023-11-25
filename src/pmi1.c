@@ -5,6 +5,7 @@
  *                         and Technology (RIST).  All rights reserved.
  * Copyright (c) 2016      Mellanox Technologies, Inc.
  *                         All rights reserved.
+ * Copyright (c) 2023      Nanook Consulting.  All rights reserved.
  * $COPYRIGHT$
  *
  * Additional copyrights may follow
@@ -12,12 +13,8 @@
  * $HEADER$
  */
 
-#include "src/include/pmix_config.h"
-
-#include "include/pmix.h"
 #include "include/pmi.h"
-
-#include "src/include/pmix_globals.h"
+#include "pmix.h"
 
 #ifdef HAVE_STRING_H
 #include <string.h>
@@ -28,14 +25,8 @@
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
-#include PMIX_EVENT_HEADER
 
 #define ANL_MAPPING "PMI_process_mapping"
-
-#include "src/mca/bfrops/bfrops.h"
-#include "src/util/argv.h"
-#include "src/util/error.h"
-#include "src/util/output.h"
 
 #define PMI_MAX_ID_LEN       PMIX_MAX_NSLEN  /* Maximim size of PMI process group ID */
 #define PMI_MAX_KEY_LEN      PMIX_MAX_KEYLEN /* Maximum size of a PMI key */
@@ -114,16 +105,16 @@ error:
     return convert_err(rc);
 }
 
-PMIX_EXPORT int PMI_Initialized(PMI_BOOL *initialized)
+PMIX_EXPORT int PMI_Initialized(int *initialized)
 {
     if (NULL == initialized) {
         return PMI_ERR_INVALID_ARG;
     }
 
     if (pmi_singleton) {
-        *initialized = PMI_TRUE;
+        *initialized = 1;
     } else {
-        *initialized = (PMIx_Initialized() ? PMI_TRUE : PMI_FALSE);
+        *initialized = (PMIx_Initialized() ? 1 : 0);
     }
 
     return PMI_SUCCESS;
@@ -168,7 +159,7 @@ PMIX_EXPORT int PMI_KVS_Put(const char kvsname[], const char key[], const char v
     PMI_CHECK();
 
     if ((kvsname == NULL) || (strlen(kvsname) > PMI_MAX_KVSNAME_LEN)) {
-        return PMI_ERR_INVALID_KVS;
+        return PMI_ERR_INVALID_KEY;
     }
     if ((key == NULL) || (strlen(key) >PMI_MAX_KEY_LEN)) {
         return PMI_ERR_INVALID_KEY;
@@ -179,9 +170,6 @@ PMIX_EXPORT int PMI_KVS_Put(const char kvsname[], const char key[], const char v
     if (pmi_singleton) {
         return PMI_SUCCESS;
     }
-
-    pmix_output_verbose(2, pmix_globals.debug_output,
-            "PMI_KVS_Put: KVS=%s, key=%s value=%s", kvsname, key, value);
 
     val.type = PMIX_STRING;
     val.data.string = (char*)value;
@@ -197,14 +185,11 @@ PMIX_EXPORT int PMI_KVS_Commit(const char kvsname[])
     PMI_CHECK();
 
     if ((kvsname == NULL) || (strlen(kvsname) > PMI_MAX_KVSNAME_LEN)) {
-        return PMI_ERR_INVALID_KVS;
+        return PMI_ERR_INVALID_KEY;
     }
     if (pmi_singleton) {
         return PMI_SUCCESS;
     }
-
-    pmix_output_verbose(2, pmix_globals.debug_output, "PMI_KVS_Commit: KVS=%s",
-            kvsname);
 
     rc = PMIx_Commit();
     return convert_err(rc);
@@ -219,7 +204,7 @@ PMIX_EXPORT int PMI_KVS_Get( const char kvsname[], const char key[], char value[
     PMI_CHECK();
 
     if ((kvsname == NULL) || (strlen(kvsname) > PMI_MAX_KVSNAME_LEN)) {
-        return PMI_ERR_INVALID_KVS;
+        return PMI_ERR_INVALID_KEY;
     }
     if ((key == NULL) || (strlen(key) > PMI_MAX_KEY_LEN)) {
         return PMI_ERR_INVALID_KEY;
@@ -227,9 +212,6 @@ PMIX_EXPORT int PMI_KVS_Get( const char kvsname[], const char key[], char value[
     if (value == NULL) {
         return PMI_ERR_INVALID_VAL;
     }
-
-    pmix_output_verbose(2, pmix_globals.debug_output,
-            "PMI_KVS_Get: KVS=%s, key=%s value=%s", kvsname, key, value);
 
     /* PMI-1 expects resource manager to set
      * process mapping in ANL notation. */
@@ -616,11 +598,11 @@ PMIX_EXPORT int PMI_Get_clique_ranks(int ranks[], int length)
     if (PMIX_SUCCESS == rc) {
         /* kv will contain a string of comma-separated
          * ranks on my node */
-        rks = pmix_argv_split(val->data.string, ',');
+        rks = PMIx_Argv_split(val->data.string, ',');
         for (i = 0; NULL != rks[i] && i < length; i++) {
             ranks[i] = strtol(rks[i], NULL, 10);
         }
-        pmix_argv_free(rks);
+        PMIx_Argv_free(rks);
         PMIX_VALUE_RELEASE(val);
     }
 
@@ -732,7 +714,7 @@ PMIX_EXPORT int PMI_Spawn_multiple(int count,
     for (i = 0; i < count; i++) {
         apps[i].cmd = strdup(cmds[i]);
         apps[i].maxprocs = maxprocs[i];
-        apps[i].argv = pmix_argv_copy((char**) argvs[i]);
+        apps[i].argv = PMIx_Argv_copy((char**) argvs[i]);
         apps[i].ninfo = info_keyval_sizesp[i];
         if (0 < apps[i].ninfo) {
             apps[i].info = (pmix_info_t*)malloc(apps[i].ninfo * sizeof(pmix_info_t));
@@ -752,7 +734,7 @@ PMIX_EXPORT int PMI_Spawn_multiple(int count,
                 free(apps);
                 return PMIX_ERR_NOMEM;
             }
-            pmix_argv_append_nosize(&apps[i].env, evar);
+            PMIx_Argv_append_nosize(&apps[i].env, evar);
             free(evar);
         }
     }

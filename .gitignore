@@ -1,52 +1,65 @@
 # Prerequisites
 *.d
 
-# Object files
+# Compiled Object files
+*.slo
+*.lo
 *.o
-*.ko
 *.obj
-*.elf
-
-# Linker output
-*.ilk
-*.map
-*.exp
+*.in~
 
 # Precompiled Headers
 *.gch
 *.pch
 
-# Libraries
-*.lib
-*.a
-*.la
-*.lo
-
-# Shared objects (inc. Windows DLLs)
-*.dll
+# Compiled Dynamic libraries
 *.so
-*.so.*
 *.dylib
+*.dll
+
+# Fortran module files
+*.mod
+*.smod
+
+# Compiled Static libraries
+*.lai
+*.la
+*.a
+*.lib
 
 # Executables
 *.exe
 *.out
 *.app
-*.i*86
-*.x86_64
-*.hex
 
-# Debug files
-*.dSYM/
-*.su
-*.idb
-*.pdb
+# Build products
+aclocal.m4
+autom4te.cache/
+config/ltmain.sh
+config/pmishim_get_version.sh
+Makefile.in
+config.log
+config/compile
+config/config.guess
+config/config.sub
+config/install-sh
+config/libtool.m4
+config/ltoptions.m4
+config/ltsugar.m4
+config/ltversion.m4
+config/lt~obsolete.m4
+config/missing
+configure
+libtool
+src/include/pmishim_config.h.in
+Makefile
+config.status
+config/depcomp
+include/version.h
+src/.deps/
+src/.libs/
+src/Makefile
+src/include/pmishim_config.h
+src/include/stamp-h1
+src/include/version.h
 
-# Kernel Module Compile Results
-*.mod*
-*.cmd
-.tmp_versions/
-modules.order
-Module.symvers
-Mkfile.old
-dkms.conf

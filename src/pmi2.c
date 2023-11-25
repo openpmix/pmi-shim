@@ -5,14 +5,13 @@
  *                         and Technology (RIST).  All rights reserved.
  * Copyright (c) 2016      Mellanox Technologies, Inc.
  *                         All rights reserved.
+ * Copyright (c) 2023      Nanook Consulting.  All rights reserved.
  * $COPYRIGHT$
  *
  * Additional copyrights may follow
  *
  * $HEADER$
  */
-
-#include "src/include/pmix_config.h"
 
 #ifdef HAVE_STRING_H
 #include <string.h>
@@ -23,16 +22,9 @@
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
-#include PMIX_EVENT_HEADER
 
 #include "include/pmi2.h"
-#include "include/pmix.h"
-
-#include "src/mca/bfrops/bfrops.h"
-#include "src/util/argv.h"
-#include "src/util/error.h"
-#include "src/util/output.h"
-#include "src/include/pmix_globals.h"
+#include "pmix.h"
 
 #define ANL_MAPPING "PMI_process_mapping"
 
@@ -193,9 +185,9 @@ PMIX_EXPORT int PMI2_Job_Spawn(int count, const char * cmds[],
                    int argcs[], const char ** argvs[],
                    const int maxprocs[],
                    const int info_keyval_sizes[],
-                   const PMI_keyval_t *info_keyval_vectors[],
+                   const PMI2_keyval_t *info_keyval_vectors[],
                    int preput_keyval_size,
-                   const PMI_keyval_t *preput_keyval_vector[],
+                   const PMI2_keyval_t preput_keyval_vector[],
                    char jobId[], int jobIdSize,
                    int errors[])
 {
@@ -231,7 +223,7 @@ PMIX_EXPORT int PMI2_Job_Spawn(int count, const char * cmds[],
         }
         /* push the preput values into the apps environ */
         for (k=0; k < preput_keyval_size; k++) {
-            if (0 > asprintf(&evar, "%s=%s", preput_keyval_vector[j]->key, preput_keyval_vector[j]->val)) {
+            if (0 > asprintf(&evar, "%s=%s", preput_keyval_vector[j].key, preput_keyval_vector[j].val)) {
                 for (i = 0; i < count; i++) {
                     PMIX_APP_DESTRUCT(&apps[i]);
                 }
@@ -377,9 +369,6 @@ PMIX_EXPORT int PMI2_KVS_Put(const char key[], const char value[])
         return PMI2_SUCCESS;
     }
 
-    pmix_output_verbose(3, pmix_globals.debug_output,
-            "PMI2_KVS_Put: key=%s value=%s", key, value);
-
     val.type = PMIX_STRING;
     val.data.string = (char*)value;
     if (PMIX_SUCCESS == (rc = PMIx_Put(PMIX_GLOBAL, key, &val))) {
@@ -394,8 +383,6 @@ PMIX_EXPORT int PMI2_KVS_Fence(void)
     pmix_status_t rc = PMIX_SUCCESS;
 
     PMI2_CHECK();
-
-    pmix_output_verbose(3, pmix_globals.debug_output, "PMI2_KVS_Fence");
 
     if (pmi2_singleton) {
         return PMI2_SUCCESS;
@@ -449,9 +436,6 @@ PMIX_EXPORT int PMI2_KVS_Get(const char *jobid, int src_pmi_id,
     if ((NULL == key) || (NULL == value)) {
         return PMI2_ERR_INVALID_ARG;
     }
-
-    pmix_output_verbose(3, pmix_globals.debug_output,
-            "PMI2_KVS_Get: key=%s jobid=%s src_pmi_id=%d", key, (jobid ? jobid : "null"), src_pmi_id);
 
     pmix_strncpy(proc.nspace, (jobid ? jobid : myproc.nspace), PMIX_MAX_NSLEN);
     if (src_pmi_id == PMI2_ID_NULL) {
@@ -629,7 +613,7 @@ PMIX_EXPORT int PMI2_Info_GetJobAttrIntArray(const char name[],
 }
 
 PMIX_EXPORT int PMI2_Nameserv_publish(const char service_name[],
-                                      const PMI_keyval_t *info_ptr, const char port[])
+                                      const PMI2_keyval_t *info_ptr, const char port[])
 {
     pmix_status_t rc = PMIX_SUCCESS;
     int nvals;
@@ -666,7 +650,7 @@ PMIX_EXPORT int PMI2_Nameserv_publish(const char service_name[],
 }
 
 PMIX_EXPORT int PMI2_Nameserv_lookup(const char service_name[],
-                                     const PMI_keyval_t *info_ptr,
+                                     const PMI2_keyval_t *info_ptr,
                                      char port[], int portLen)
 {
     pmix_status_t rc = PMIX_SUCCESS;
@@ -694,7 +678,7 @@ PMIX_EXPORT int PMI2_Nameserv_lookup(const char service_name[],
     if (NULL != info_ptr) {
         pmix_strncpy(pdata[1].key, info_ptr->key, PMIX_MAX_KEYLEN);
         pdata[1].value.type = PMIX_STRING;
-        pdata[1].value.data.string = info_ptr->val;
+        pdata[1].value.data.string = (char*)info_ptr->val;
         nvals = 2;
     }
 
@@ -725,7 +709,7 @@ PMIX_EXPORT int PMI2_Nameserv_lookup(const char service_name[],
 }
 
 PMIX_EXPORT int PMI2_Nameserv_unpublish(const char service_name[],
-                           const PMI_keyval_t *info_ptr)
+                           const PMI2_keyval_t *info_ptr)
 {
     pmix_status_t rc = PMIX_SUCCESS;
     char *keys[3];
@@ -747,7 +731,7 @@ PMIX_EXPORT int PMI2_Nameserv_unpublish(const char service_name[],
 
     /* if provided, add any other value */
     if (NULL != info_ptr) {
-        keys[1] = info_ptr->key;
+        keys[1] = (char*)info_ptr->key;
     }
 
     rc = PMIx_Unpublish(keys, NULL, 0);
