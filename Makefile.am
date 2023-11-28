@@ -22,4 +22,5 @@ EXTRA_DIST = \
         README.md VERSION COPYING AUTHORS \
         config/pmishim_get_version.sh
 
-SUBDIRS = src
+SUBDIRS = include src
+

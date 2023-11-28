@@ -234,6 +234,29 @@ S*/
     int PMI2_Job_GetId(char jobid[], int jobid_size);
 
 /*@
+  PMI2_Job_GetRank - get rank of this job
+
+  Output parameters:
+  . rank - the rank of this job
+
+  Return values:
+  Returns 'PMI2_SUCCESS' on success and an PMI error code on failure.
+
+@*/
+int PMI2_Job_GetRank(int* rank);
+
+/*@
+  PMI2_Info_GetSize - get the number of processes on the node
+
+  Output parameters:
+  . size - the number of processes on the node
+
+  Return values:
+  Returns 'PMI2_SUCCESS' on success and an PMI error code on failure.
+@*/
+int PMI2_Info_GetSize(int* size);
+
+/*@
   PMI2_Job_Connect - connect to the parallel job with ID jobid
 
   Input parameters:
