@@ -27,6 +27,8 @@
 #include <stdlib.h>
 #endif
 
+#include <stdio.h>
+
 #define ANL_MAPPING "PMI_process_mapping"
 
 #define PMI_MAX_ID_LEN       PMIX_MAX_NSLEN  /* Maximim size of PMI process group ID */
@@ -697,7 +699,7 @@ PMISHIM_EXPORT int PMI_Spawn_multiple(int count,
     pmix_status_t rc = PMIX_SUCCESS;
     pmix_app_t *apps;
     int i, k;
-    size_t j;
+    size_t j, len;
     char *evar;
 
     PMI_CHECK();
@@ -728,11 +730,14 @@ PMISHIM_EXPORT int PMI_Spawn_multiple(int count,
         }
         /* push the preput values into the apps environ */
         for (k = 0; k < preput_keyval_size; k++) {
-            if (0 > asprintf(&evar, "%s=%s", preput_keyval_vector[k].key, preput_keyval_vector[k].val)) {
+	    len = strlen(preput_keyval_vector[k].key) + strlen(preput_keyval_vector[k].val) + 2;
+	    evar = malloc(len);
+            if (0 > snprintf(evar, len, "%s=%s", preput_keyval_vector[k].key, preput_keyval_vector[k].val)) {
                 for (i = 0; i < count; i++) {
                     PMIX_APP_DESTRUCT(&apps[i]);
                 }
                 free(apps);
+		free(evar);
                 return PMIX_ERR_NOMEM;
             }
             PMIx_Argv_append_nosize(&apps[i].env, evar);

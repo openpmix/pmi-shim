@@ -50,6 +50,8 @@ config/ltversion.m4
 config/lt~obsolete.m4
 config/missing
 configure
+config/pmishim_get_version.sh~
+configure~
 libtool
 Makefile
 config.status
