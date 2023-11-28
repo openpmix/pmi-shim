@@ -12,8 +12,15 @@
 AM_CPPFLAGS = -I$(top_builddir)/src/include
 
 #
-# libpmishim[.so|.a]
+# libpmi[.so|.a]
 #
-lib_LTLIBRARIES = libpmishim.la
-libpmishim_la_SOURCES = pmi1.c pmi2.c
-libpmishim_la_LDFLAGS = $(pmix_LDFLAGS) -version-info $(libpmishim_so_version)
+lib_LTLIBRARIES = libpmi.la
+libpmi_la_SOURCES = pmi1.c
+libpmi_la_LDFLAGS = $(pmix_LDFLAGS) -version-info $(libpmishim_so_version)
+
+#
+# libpmi2[.so|.a]
+#
+lib_LTLIBRARIES += libpmi2.la
+libpmi2_la_SOURCES = pmi2.c
+libpmi2_la_LDFLAGS = $(pmix_LDFLAGS) -version-info $(libpmishim_so_version)

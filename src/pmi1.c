@@ -13,6 +13,7 @@
  * $HEADER$
  */
 
+#include "src/include/pmishim_config.h"
 #include "include/pmi.h"
 #include "pmix.h"
 
@@ -48,7 +49,7 @@ static pmix_proc_t myproc;
 static int pmi_init = 0;
 static bool pmi_singleton = false;
 
-PMIX_EXPORT int PMI_Init(int *spawned)
+PMISHIM_EXPORT int PMI_Init(int *spawned)
 {
     pmix_status_t rc = PMIX_SUCCESS;
     pmix_value_t *val;
@@ -105,7 +106,7 @@ error:
     return convert_err(rc);
 }
 
-PMIX_EXPORT int PMI_Initialized(int *initialized)
+PMISHIM_EXPORT int PMI_Initialized(PMI_BOOL *initialized)
 {
     if (NULL == initialized) {
         return PMI_ERR_INVALID_ARG;
@@ -120,7 +121,7 @@ PMIX_EXPORT int PMI_Initialized(int *initialized)
     return PMI_SUCCESS;
 }
 
-PMIX_EXPORT int PMI_Finalize(void)
+PMISHIM_EXPORT int PMI_Finalize(void)
 {
     pmix_status_t rc = PMIX_SUCCESS;
 
@@ -135,7 +136,7 @@ PMIX_EXPORT int PMI_Finalize(void)
     return convert_err(rc);
 }
 
-PMIX_EXPORT int PMI_Abort(int flag, const char msg[])
+PMISHIM_EXPORT int PMI_Abort(int flag, const char msg[])
 {
     pmix_status_t rc = PMIX_SUCCESS;
 
@@ -151,7 +152,7 @@ PMIX_EXPORT int PMI_Abort(int flag, const char msg[])
 
 /* KVS_Put - we default to PMIX_GLOBAL scope and ignore the
  * provided kvsname as we only put into our own nspace */
-PMIX_EXPORT int PMI_KVS_Put(const char kvsname[], const char key[], const char value[])
+PMISHIM_EXPORT int PMI_KVS_Put(const char kvsname[], const char key[], const char value[])
 {
     pmix_status_t rc = PMIX_SUCCESS;
     pmix_value_t val;
@@ -178,7 +179,7 @@ PMIX_EXPORT int PMI_KVS_Put(const char kvsname[], const char key[], const char v
 }
 
 /* KVS_Commit */
-PMIX_EXPORT int PMI_KVS_Commit(const char kvsname[])
+PMISHIM_EXPORT int PMI_KVS_Commit(const char kvsname[])
 {
     pmix_status_t rc = PMIX_SUCCESS;
 
@@ -195,7 +196,7 @@ PMIX_EXPORT int PMI_KVS_Commit(const char kvsname[])
     return convert_err(rc);
 }
 
-PMIX_EXPORT int PMI_KVS_Get( const char kvsname[], const char key[], char value[], int length)
+PMISHIM_EXPORT int PMI_KVS_Get( const char kvsname[], const char key[], char value[], int length)
 {
     pmix_status_t rc = PMIX_SUCCESS;
     pmix_value_t *val;
@@ -257,7 +258,7 @@ PMIX_EXPORT int PMI_KVS_Get( const char kvsname[], const char key[], char value[
 
 /* Barrier only applies to our own nspace, and we want all
  * data to be collected upon completion */
-PMIX_EXPORT int PMI_Barrier(void)
+PMISHIM_EXPORT int PMI_Barrier(void)
 {
     pmix_status_t rc = PMIX_SUCCESS;
     pmix_info_t buf;
@@ -282,7 +283,7 @@ PMIX_EXPORT int PMI_Barrier(void)
     return convert_err(rc);
 }
 
-PMIX_EXPORT int PMI_Get_size(int *size)
+PMISHIM_EXPORT int PMI_Get_size(int *size)
 {
     pmix_status_t rc = PMIX_SUCCESS;
     pmix_value_t *val;
@@ -319,7 +320,7 @@ PMIX_EXPORT int PMI_Get_size(int *size)
     return convert_err(rc);
 }
 
-PMIX_EXPORT int PMI_Get_rank(int *rk)
+PMISHIM_EXPORT int PMI_Get_rank(int *rk)
 {
     PMI_CHECK();
 
@@ -331,7 +332,7 @@ PMIX_EXPORT int PMI_Get_rank(int *rk)
     return PMI_SUCCESS;
 }
 
-PMIX_EXPORT int PMI_Get_universe_size(int *size)
+PMISHIM_EXPORT int PMI_Get_universe_size(int *size)
 {
     pmix_status_t rc = PMIX_SUCCESS;
     pmix_value_t *val;
@@ -368,7 +369,7 @@ PMIX_EXPORT int PMI_Get_universe_size(int *size)
     return convert_err(rc);
 }
 
-PMIX_EXPORT int PMI_Get_appnum(int *appnum)
+PMISHIM_EXPORT int PMI_Get_appnum(int *appnum)
 {
     pmix_status_t rc = PMIX_SUCCESS;
     pmix_value_t *val;
@@ -407,7 +408,7 @@ PMIX_EXPORT int PMI_Get_appnum(int *appnum)
     return convert_err(rc);
 }
 
-PMIX_EXPORT int PMI_Publish_name(const char service_name[], const char port[])
+PMISHIM_EXPORT int PMI_Publish_name(const char service_name[], const char port[])
 {
     pmix_status_t rc = PMIX_SUCCESS;
     pmix_info_t info;
@@ -434,7 +435,7 @@ PMIX_EXPORT int PMI_Publish_name(const char service_name[], const char port[])
     return convert_err(rc);
 }
 
-PMIX_EXPORT int PMI_Unpublish_name(const char service_name[])
+PMISHIM_EXPORT int PMI_Unpublish_name(const char service_name[])
 {
     pmix_status_t rc = PMIX_SUCCESS;
     char *keys[2];
@@ -457,7 +458,7 @@ PMIX_EXPORT int PMI_Unpublish_name(const char service_name[])
     return convert_err(rc);
 }
 
-PMIX_EXPORT int PMI_Lookup_name(const char service_name[], char port[])
+PMISHIM_EXPORT int PMI_Lookup_name(const char service_name[], char port[])
 {
     pmix_status_t rc = PMIX_SUCCESS;
     pmix_pdata_t pdata;
@@ -498,7 +499,7 @@ PMIX_EXPORT int PMI_Lookup_name(const char service_name[], char port[])
     return PMIX_SUCCESS;
 }
 
-PMIX_EXPORT int PMI_Get_id(char id_str[], int length)
+PMISHIM_EXPORT int PMI_Get_id(char id_str[], int length)
 {
     /* we already obtained our nspace during PMI_Init,
      * so all we have to do here is return it */
@@ -517,7 +518,7 @@ PMIX_EXPORT int PMI_Get_id(char id_str[], int length)
     return PMI_SUCCESS;
 }
 
-PMIX_EXPORT int PMI_Get_kvs_domain_id(char id_str[], int length)
+PMISHIM_EXPORT int PMI_Get_kvs_domain_id(char id_str[], int length)
 {
     PMI_CHECK();
 
@@ -525,7 +526,7 @@ PMIX_EXPORT int PMI_Get_kvs_domain_id(char id_str[], int length)
     return PMI_Get_id(id_str, length);
 }
 
-PMIX_EXPORT int PMI_Get_id_length_max(int *length)
+PMISHIM_EXPORT int PMI_Get_id_length_max(int *length)
 {
     PMI_CHECK();
 
@@ -537,7 +538,7 @@ PMIX_EXPORT int PMI_Get_id_length_max(int *length)
     return PMI_SUCCESS;
 }
 
-PMIX_EXPORT int PMI_Get_clique_size(int *size)
+PMISHIM_EXPORT int PMI_Get_clique_size(int *size)
 {
     pmix_status_t rc = PMIX_SUCCESS;
     pmix_value_t *val;
@@ -574,7 +575,7 @@ PMIX_EXPORT int PMI_Get_clique_size(int *size)
     return convert_err(rc);
 }
 
-PMIX_EXPORT int PMI_Get_clique_ranks(int ranks[], int length)
+PMISHIM_EXPORT int PMI_Get_clique_ranks(int ranks[], int length)
 {
     pmix_status_t rc = PMIX_SUCCESS;
     pmix_value_t *val;
@@ -609,7 +610,7 @@ PMIX_EXPORT int PMI_Get_clique_ranks(int ranks[], int length)
     return convert_err(rc);
 }
 
-PMIX_EXPORT int PMI_KVS_Get_my_name(char kvsname[], int length)
+PMISHIM_EXPORT int PMI_KVS_Get_my_name(char kvsname[], int length)
 {
     PMI_CHECK();
 
@@ -617,7 +618,7 @@ PMIX_EXPORT int PMI_KVS_Get_my_name(char kvsname[], int length)
     return PMI_Get_id(kvsname, length);
 }
 
-PMIX_EXPORT int PMI_KVS_Get_name_length_max(int *length)
+PMISHIM_EXPORT int PMI_KVS_Get_name_length_max(int *length)
 {
     PMI_CHECK();
 
@@ -629,7 +630,7 @@ PMIX_EXPORT int PMI_KVS_Get_name_length_max(int *length)
     return PMI_SUCCESS;
 }
 
-PMIX_EXPORT int PMI_KVS_Get_key_length_max(int *length)
+PMISHIM_EXPORT int PMI_KVS_Get_key_length_max(int *length)
 {
     PMI_CHECK();
 
@@ -641,7 +642,7 @@ PMIX_EXPORT int PMI_KVS_Get_key_length_max(int *length)
     return PMI_SUCCESS;
 }
 
-PMIX_EXPORT int PMI_KVS_Get_value_length_max(int *length)
+PMISHIM_EXPORT int PMI_KVS_Get_value_length_max(int *length)
 {
     PMI_CHECK();
 
@@ -657,33 +658,33 @@ PMIX_EXPORT int PMI_KVS_Get_value_length_max(int *length)
 
 /* nobody supports this call, which is why it was
  * dropped for PMI-2 */
-PMIX_EXPORT int PMI_KVS_Create(char kvsname[], int length)
+PMISHIM_EXPORT int PMI_KVS_Create(char kvsname[], int length)
 {
     return PMI_FAIL;
 }
 
 /* nobody supports this call, which is why it was
  * dropped for PMI-2 */
-PMIX_EXPORT int PMI_KVS_Destroy(const char kvsname[])
+PMISHIM_EXPORT int PMI_KVS_Destroy(const char kvsname[])
 {
     return PMI_FAIL;
 }
 
 /* nobody supports this call, which is why it was
  * dropped for PMI-2 */
-PMIX_EXPORT int PMI_KVS_Iter_first(const char kvsname[], char key[], int key_len, char val[], int val_len)
+PMISHIM_EXPORT int PMI_KVS_Iter_first(const char kvsname[], char key[], int key_len, char val[], int val_len)
 {
     return PMI_FAIL;
 }
 
 /* nobody supports this call, which is why it was
  * dropped for PMI-2 */
-PMIX_EXPORT int PMI_KVS_Iter_next(const char kvsname[], char key[], int key_len, char val[], int val_len)
+PMISHIM_EXPORT int PMI_KVS_Iter_next(const char kvsname[], char key[], int key_len, char val[], int val_len)
 {
     return PMI_FAIL;
 }
 
-PMIX_EXPORT int PMI_Spawn_multiple(int count,
+PMISHIM_EXPORT int PMI_Spawn_multiple(int count,
                        const char * cmds[],
                        const char ** argvs[],
                        const int maxprocs[],
@@ -755,28 +756,28 @@ PMIX_EXPORT int PMI_Spawn_multiple(int count,
 
 /* nobody supports this call, which is why it was
  * dropped for PMI-2 */
-PMIX_EXPORT int PMI_Parse_option(int num_args, char *args[], int *num_parsed, PMI_keyval_t **keyvalp, int *size)
+PMISHIM_EXPORT int PMI_Parse_option(int num_args, char *args[], int *num_parsed, PMI_keyval_t **keyvalp, int *size)
 {
     return PMI_FAIL;
 }
 
 /* nobody supports this call, which is why it was
  * dropped for PMI-2 */
-PMIX_EXPORT int PMI_Args_to_keyval(int *argcp, char *((*argvp)[]), PMI_keyval_t **keyvalp, int *size)
+PMISHIM_EXPORT int PMI_Args_to_keyval(int *argcp, char *((*argvp)[]), PMI_keyval_t **keyvalp, int *size)
 {
     return PMI_FAIL;
 }
 
 /* nobody supports this call, which is why it was
  * dropped for PMI-2 */
-PMIX_EXPORT int PMI_Free_keyvals(PMI_keyval_t keyvalp[], int size)
+PMISHIM_EXPORT int PMI_Free_keyvals(PMI_keyval_t keyvalp[], int size)
 {
     return PMI_FAIL;
 }
 
 /* nobody supports this call, which is why it was
  * dropped for PMI-2 */
-PMIX_EXPORT int PMI_Get_options(char *str, int *length)
+PMISHIM_EXPORT int PMI_Get_options(char *str, int *length)
 {
     return PMI_FAIL;
 }

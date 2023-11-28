@@ -51,7 +51,7 @@ AC_LANG([C])
 
 AC_INIT([pmi-shim],[m4_normalize(esyscmd([config/pmishim_get_version.sh VERSION --tarball]))],
         [https://github.com/openpmix/pmi-shim/issues],[pmishim])
-AC_PREREQ([2.71])
+AC_PREREQ([2.70])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR(./config)
 
@@ -92,8 +92,8 @@ pmishim_show_subtitle "Checking versions"
 
 # Get the version of PMI-SHIM that we are installing
 
-PMISHIM_SAVE_VERSION([pmishim], [PMI-SHIM], [$srcdir/VERSION],
-                      [include/version.h])
+PMISHIM_SAVE_VERSION([PMISHIM], [PMI-SHIM], [$srcdir/VERSION],
+                      [include/pmishim_version.h])
 
 # Get shared library version numbers
 
@@ -152,7 +152,13 @@ AH_TOP([/* -*- c -*-
 #ifndef PMISHIM_CONFIG_H
 #define PMISHIM_CONFIG_H
 
-#include "pmishim_config_top.h"
+#undef PMISHIM_HAVE_VISIBILITY
+
+#if PMISHIM_HAVE_VISIBILITY == 1
+#define PMISHIM_EXPORT __attribute__((__visibility__("default")))
+#else
+#define PMISHIM_EXPORT
+#endif
 
 ])
 AH_BOTTOM([
@@ -163,7 +169,7 @@ AH_BOTTOM([
 # Other basic setup stuff
 
 PMISHIM_BASIC_SETUP
-
+PMISHIM_CHECK_VISIBILITY
 
 ############################################################################
 # Configuration options
@@ -292,6 +298,7 @@ AC_SUBST(CXXFLAGS)
 AC_CONFIG_FILES([
     Makefile
     src/Makefile
+    include/Makefile
 ])
 
 AC_MSG_CHECKING([final CPPFLAGS])

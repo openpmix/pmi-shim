@@ -13,6 +13,8 @@
  * $HEADER$
  */
 
+#include "src/include/pmishim_config.h"
+
 #ifdef HAVE_STRING_H
 #include <string.h>
 #endif
@@ -43,7 +45,7 @@ static int pmi2_init = 0;
 static bool commit_reqd = false;
 static bool pmi2_singleton = false;
 
-PMIX_EXPORT int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
+PMISHIM_EXPORT int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
 {
     pmix_status_t rc = PMIX_SUCCESS;
     pmix_value_t *val;
@@ -141,7 +143,7 @@ error:
     return convert_err(rc);
 }
 
-PMIX_EXPORT int PMI2_Initialized(void)
+PMISHIM_EXPORT int PMI2_Initialized(void)
 {
     int initialized;
     if (pmi2_singleton) {
@@ -152,7 +154,7 @@ PMIX_EXPORT int PMI2_Initialized(void)
     return initialized;
 }
 
-PMIX_EXPORT int PMI2_Finalize(void)
+PMISHIM_EXPORT int PMI2_Finalize(void)
 {
     pmix_status_t rc = PMIX_SUCCESS;
 
@@ -167,7 +169,12 @@ PMIX_EXPORT int PMI2_Finalize(void)
     return convert_err(rc);
 }
 
-PMIX_EXPORT int PMI2_Abort(int flag, const char msg[])
+PMISHIM_EXPORT int PMI2_Set_threaded(int is_threaded)
+{
+    return PMI2_FAIL;
+}
+
+PMISHIM_EXPORT int PMI2_Abort(int flag, const char msg[])
 {
     pmix_status_t rc = PMIX_SUCCESS;
 
@@ -181,7 +188,7 @@ PMIX_EXPORT int PMI2_Abort(int flag, const char msg[])
     return convert_err(rc);
 }
 
-PMIX_EXPORT int PMI2_Job_Spawn(int count, const char * cmds[],
+PMISHIM_EXPORT int PMI2_Job_Spawn(int count, const char * cmds[],
                    int argcs[], const char ** argvs[],
                    const int maxprocs[],
                    const int info_keyval_sizes[],
@@ -250,7 +257,7 @@ PMIX_EXPORT int PMI2_Job_Spawn(int count, const char * cmds[],
     return convert_err(rc);
 }
 
-PMIX_EXPORT int PMI2_Job_GetId(char jobid[], int jobid_size)
+PMISHIM_EXPORT int PMI2_Job_GetId(char jobid[], int jobid_size)
 {
     /* we already obtained our nspace during pmi2_init,
      * so all we have to do here is return it */
@@ -265,7 +272,7 @@ PMIX_EXPORT int PMI2_Job_GetId(char jobid[], int jobid_size)
     return PMI2_SUCCESS;
 }
 
-PMIX_EXPORT int PMI2_Job_GetRank(int *rank)
+PMISHIM_EXPORT int PMI2_Job_GetRank(int *rank)
 {
     PMI2_CHECK();
 
@@ -276,7 +283,7 @@ PMIX_EXPORT int PMI2_Job_GetRank(int *rank)
     return PMI2_SUCCESS;
 }
 
-PMIX_EXPORT int PMI2_Info_GetSize(int *size)
+PMISHIM_EXPORT int PMI2_Info_GetSize(int *size)
 {
     pmix_status_t rc = PMIX_ERROR;
     pmix_value_t *val;
@@ -313,7 +320,7 @@ PMIX_EXPORT int PMI2_Info_GetSize(int *size)
     return convert_err(rc);
 }
 
-PMIX_EXPORT int PMI2_Job_Connect(const char jobid[], PMI2_Connect_comm_t *conn)
+PMISHIM_EXPORT int PMI2_Job_Connect(const char jobid[], PMI2_Connect_comm_t *conn)
 {
     pmix_status_t rc = PMIX_SUCCESS;
     pmix_proc_t proc;
@@ -335,7 +342,7 @@ PMIX_EXPORT int PMI2_Job_Connect(const char jobid[], PMI2_Connect_comm_t *conn)
     return convert_err(rc);
 }
 
-PMIX_EXPORT int PMI2_Job_Disconnect(const char jobid[])
+PMISHIM_EXPORT int PMI2_Job_Disconnect(const char jobid[])
 {
     pmix_status_t rc = PMIX_SUCCESS;
     pmix_proc_t proc;
@@ -354,7 +361,7 @@ PMIX_EXPORT int PMI2_Job_Disconnect(const char jobid[])
 }
 
 /* KVS_Put - we default to PMIX_GLOBAL scope */
-PMIX_EXPORT int PMI2_KVS_Put(const char key[], const char value[])
+PMISHIM_EXPORT int PMI2_KVS_Put(const char key[], const char value[])
 {
     pmix_status_t rc = PMIX_SUCCESS;
     pmix_value_t val;
@@ -378,7 +385,7 @@ PMIX_EXPORT int PMI2_KVS_Put(const char key[], const char value[])
 }
 
 /* KVS_Fence */
-PMIX_EXPORT int PMI2_KVS_Fence(void)
+PMISHIM_EXPORT int PMI2_KVS_Fence(void)
 {
     pmix_status_t rc = PMIX_SUCCESS;
 
@@ -416,7 +423,7 @@ PMIX_EXPORT int PMI2_KVS_Fence(void)
  * will use the local nspace, which matches the PMI2 spec.
  * The only type of value supported by PMI2 is a string, so
  * the return of anything else is an error */
-PMIX_EXPORT int PMI2_KVS_Get(const char *jobid, int src_pmi_id,
+PMISHIM_EXPORT int PMI2_KVS_Get(const char *jobid, int src_pmi_id,
                              const char key[], char value [],
                              int maxvalue, int *vallen)
 {
@@ -459,7 +466,7 @@ PMIX_EXPORT int PMI2_KVS_Get(const char *jobid, int src_pmi_id,
     return convert_err(rc);
 }
 
-PMIX_EXPORT int PMI2_Info_GetNodeAttr(const char name[],
+PMISHIM_EXPORT int PMI2_Info_GetNodeAttr(const char name[],
                                       char value[], int valuelen,
                                       int *found, int waitfor)
 {
@@ -506,14 +513,14 @@ PMIX_EXPORT int PMI2_Info_GetNodeAttr(const char name[],
     return convert_err(rc);
 }
 
-PMIX_EXPORT int PMI2_Info_GetNodeAttrIntArray(const char name[], int array[],
+PMISHIM_EXPORT int PMI2_Info_GetNodeAttrIntArray(const char name[], int array[],
                                   int arraylen, int *outlen, int *found)
 {
     return PMI2_FAIL;
 }
 
 /* push info at the PMIX_LOCAL scope */
-PMIX_EXPORT int PMI2_Info_PutNodeAttr(const char name[], const char value[])
+PMISHIM_EXPORT int PMI2_Info_PutNodeAttr(const char name[], const char value[])
 {
     pmix_status_t rc = PMIX_SUCCESS;
     pmix_value_t val;
@@ -534,7 +541,7 @@ PMIX_EXPORT int PMI2_Info_PutNodeAttr(const char name[], const char value[])
     return convert_err(rc);
 }
 
-PMIX_EXPORT int PMI2_Info_GetJobAttr(const char name[], char value[], int valuelen, int *found)
+PMISHIM_EXPORT int PMI2_Info_GetJobAttr(const char name[], char value[], int valuelen, int *found)
 {
     pmix_status_t rc = PMIX_SUCCESS;
     pmix_value_t *val;
@@ -605,14 +612,14 @@ PMIX_EXPORT int PMI2_Info_GetJobAttr(const char name[], char value[], int valuel
     return convert_err(rc);
 }
 
-PMIX_EXPORT int PMI2_Info_GetJobAttrIntArray(const char name[],
+PMISHIM_EXPORT int PMI2_Info_GetJobAttrIntArray(const char name[],
                                              int array[], int arraylen,
                                              int *outlen, int *found)
 {
     return PMI2_FAIL;
 }
 
-PMIX_EXPORT int PMI2_Nameserv_publish(const char service_name[],
+PMISHIM_EXPORT int PMI2_Nameserv_publish(const char service_name[],
                                       const PMI2_keyval_t *info_ptr, const char port[])
 {
     pmix_status_t rc = PMIX_SUCCESS;
@@ -649,7 +656,7 @@ PMIX_EXPORT int PMI2_Nameserv_publish(const char service_name[],
     return convert_err(rc);
 }
 
-PMIX_EXPORT int PMI2_Nameserv_lookup(const char service_name[],
+PMISHIM_EXPORT int PMI2_Nameserv_lookup(const char service_name[],
                                      const PMI2_keyval_t *info_ptr,
                                      char port[], int portLen)
 {
@@ -708,7 +715,7 @@ PMIX_EXPORT int PMI2_Nameserv_lookup(const char service_name[],
     return PMI2_SUCCESS;
 }
 
-PMIX_EXPORT int PMI2_Nameserv_unpublish(const char service_name[],
+PMISHIM_EXPORT int PMI2_Nameserv_unpublish(const char service_name[],
                            const PMI2_keyval_t *info_ptr)
 {
     pmix_status_t rc = PMIX_SUCCESS;

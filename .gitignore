@@ -51,15 +51,15 @@ config/lt~obsolete.m4
 config/missing
 configure
 libtool
-src/include/pmishim_config.h.in
 Makefile
 config.status
 config/depcomp
-include/version.h
+include/pmishim_version.h
 src/.deps/
 src/.libs/
 src/Makefile
 src/include/pmishim_config.h
+src/include/pmishim_config.h.in
 src/include/stamp-h1
 src/include/version.h
 
