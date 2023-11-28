@@ -24,6 +24,7 @@
 #ifdef HAVE_STDLIB_H
 #include <stdlib.h>
 #endif
+#include <stdio.h>
 
 #include "include/pmi2.h"
 #include "pmix.h"
@@ -54,6 +55,7 @@ PMISHIM_EXPORT int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
     pmix_proc_t proc = myproc;
     proc.rank = PMIX_RANK_WILDCARD;
 
+fprintf(stderr, "PMI2_INIT\n");
     if (PMIX_SUCCESS != (rc = PMIx_Init(&myproc, NULL, 0))) {
         /* if we didn't see a PMIx server (e.g., missing envar),
          * then allow us to run as a singleton */
@@ -201,7 +203,7 @@ PMISHIM_EXPORT int PMI2_Job_Spawn(int count, const char * cmds[],
     pmix_status_t rc = PMIX_SUCCESS;
     pmix_app_t *apps;
     int i, k;
-    size_t j;
+    size_t j, len;
     char *evar;
 
     PMI2_CHECK();
@@ -230,14 +232,17 @@ PMISHIM_EXPORT int PMI2_Job_Spawn(int count, const char * cmds[],
         }
         /* push the preput values into the apps environ */
         for (k=0; k < preput_keyval_size; k++) {
-            if (0 > asprintf(&evar, "%s=%s", preput_keyval_vector[j].key, preput_keyval_vector[j].val)) {
+	    len = strlen(preput_keyval_vector[j].key) + strlen(preput_keyval_vector[j].val) + 2;
+	    evar = malloc(len);
+            if (0 > snprintf(evar, len, "%s=%s", preput_keyval_vector[j].key, preput_keyval_vector[j].val)) {
                 for (i = 0; i < count; i++) {
                     PMIX_APP_DESTRUCT(&apps[i]);
                 }
                 free(apps);
+		free(evar);
                 return PMIX_ERR_NOMEM;
             }
-            pmix_argv_append_nosize(&apps[i].env, evar);
+            PMIx_Argv_append_nosize(&apps[i].env, evar);
             free(evar);
         }
     }
