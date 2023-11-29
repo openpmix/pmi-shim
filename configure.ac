@@ -50,15 +50,43 @@ AC_LANG([C])
 # version
 
 AC_INIT([pmi-shim],[m4_normalize(esyscmd([config/pmishim_get_version.sh VERSION --tarball]))],
-        [https://github.com/openpmix/pmi-shim/issues],[pmishim])
+        [https://github.com/openpmishim/pmi-shim/issues],[pmishim])
 AC_PREREQ([2.70])
 AC_CONFIG_AUX_DIR(config)
 AC_CONFIG_MACRO_DIR(./config)
 
-#
-# Start it up
-#
+AC_PROG_SED
 
+# autotools expects to perform tests without interference
+# from user-provided CFLAGS, particularly -Werror flags.
+# Search for them here and cache any we find
+PMISHIM_CFLAGS_cache=
+PMISHIM_CFLAGS_pass=
+for val in $CFLAGS; do
+    if echo "$val" | grep -q -e "-W"; then
+        PMISHIM_CFLAGS_cache="$PMISHIM_CFLAGS_cache $val";
+    else
+        PMISHIM_CFLAGS_pass="$PMISHIM_CFLAGS_pass $val";
+    fi
+done
+CFLAGS=$PMISHIM_CFLAGS_pass
+
+PMISHIM_TOP_BUILDDIR="`pwd`"
+AC_SUBST(PMISHIM_TOP_BUILDDIR)
+top_buildir=`pwd`
+cd "$srcdir"
+PMISHIM_TOP_SRCDIR="`pwd`"
+top_srcdir=$PMISHIM_TOP_SRCDIR
+AC_SUBST(PMISHIM_TOP_SRCDIR)
+cd "$PMISHIM_TOP_BUILDDIR"
+
+AC_MSG_NOTICE([builddir: $PMISHIM_TOP_BUILDDIR])
+AC_MSG_NOTICE([srcdir: $PMISHIM_TOP_SRCDIR])
+if test "$PMISHIM_TOP_BUILDDIR" != "$PMISHIM_TOP_SRCDIR"; then
+    AC_MSG_NOTICE([Detected VPATH build])
+fi
+
+# setup configure options (e.g., show_title and friends)
 PMISHIM_CONFIGURE_SETUP
 
 pmishim_show_title "Configuring PMI-SHIM"
@@ -66,9 +94,6 @@ pmishim_show_title "Configuring PMI-SHIM"
 #
 # Setup some things that must be done before AM-INIT-AUTOMAKE
 #
-
-pmishim_show_subtitle "Startup tests"
-
 AC_CANONICAL_HOST
 AC_CANONICAL_TARGET
 AC_DEFINE_UNQUOTED(PMISHIM_ARCH, "$target", [PMI-SHIM architecture string])
@@ -84,6 +109,41 @@ AM_INIT_AUTOMAKE([foreign dist-bzip2 subdir-objects no-define 1.13.4 tar-ustar])
 # (even though they're supposed to be identical).  Shrug.
 AM_SILENT_RULES([yes])
 
+# set the language
+AC_LANG([C])
+# find NM
+AC_PROG_GREP
+LT_PATH_NM
+
+# AC_USE_SYSTEM_EXTENSIONS will modify CFLAGS if nothing was in there
+# beforehand.  We don't want that.  So if there was nothing in
+# CFLAGS, put nothing back in there.
+PMISHIM_VAR_SCOPE_PUSH([CFLAGS_save])
+CFLAGS_save=$CFLAGS
+AC_USE_SYSTEM_EXTENSIONS
+AS_IF([test -z "$CFLAGS_save"], [CFLAGS=])
+PMISHIM_VAR_SCOPE_POP
+
+# Sanity checks
+AC_DEFUN([PMISHIM_CHECK_DIR_FOR_SPACES],[
+    dir="$1"
+    article="$2"
+    label="$3"
+
+    AC_MSG_CHECKING([directory of $label])
+    AC_MSG_RESULT([$dir])
+    AS_IF([test -n "`echo $dir | grep ' '`"],
+          [AC_MSG_WARN([This version of OpenPMIshim does not support $article $label])
+           AC_MSG_WARN([with a path that contains spaces])
+           AC_MSG_ERROR([Cannot continue.])])
+])
+
+PMISHIM_VAR_SCOPE_PUSH(pmishim_checkdir)
+pmishim_checkdir=`pwd`
+PMISHIM_CHECK_DIR_FOR_SPACES([$pmishim_checkdir], [a], [build tree])
+PMISHIM_CHECK_DIR_FOR_SPACES([$prefix], [a], [prefix])
+PMISHIM_CHECK_DIR_FOR_SPACES([$srcdir], [a], [source tree])
+PMISHIM_VAR_SCOPE_POP
 
 # Make configure depend on the VERSION file, since it's used in AC_INIT
 AC_SUBST([CONFIGURE_DEPENDENCIES], ['$(top_srcdir)/VERSION'])
@@ -121,19 +181,6 @@ AC_CONFIG_HEADERS([src/include/pmishim_config.h])
 
 pmishim_show_subtitle "Initialization, setup"
 
-PMISHIM_TOP_BUILDDIR="`pwd`"
-AC_SUBST(PMISHIM_TOP_BUILDDIR)
-cd "$srcdir"
-PMISHIM_TOP_SRCDIR="`pwd`"
-AC_SUBST(PMISHIM_TOP_SRCDIR)
-cd "$PMISHIM_TOP_BUILDDIR"
-
-AC_MSG_NOTICE([builddir: $PMISHIM_TOP_BUILDDIR])
-AC_MSG_NOTICE([srcdir: $PMISHIM_TOP_SRCDIR])
-if test "$PMISHIM_TOP_BUILDDIR" != "$PMISHIM_TOP_SRCDIR"; then
-    AC_MSG_NOTICE([Detected VPATH build])
-fi
-
 # Setup the top of the src/include/pmishim_config.h file
 
 AH_TOP([/* -*- c -*-
@@ -162,7 +209,7 @@ AH_TOP([/* -*- c -*-
 
 ])
 AH_BOTTOM([
-#include "pmishim_config_bottom.h"
+#include "src/include/pmishim_config_bottom.h"
 #endif /* PMISHIM_CONFIG_H */
 ])
 
@@ -170,73 +217,10 @@ AH_BOTTOM([
 
 PMISHIM_BASIC_SETUP
 PMISHIM_CHECK_VISIBILITY
+PMISHIM_SETUP_CORE
 
-############################################################################
-# Configuration options
-############################################################################
-
-#
-# Is this a developer copy?
-#
-
-if test -d .git; then
-    PMISHIM_DEVEL=1
-else
-    PMISHIM_DEVEL=0
-fi
-
-#
-# Developer picky compiler options
-#
-
-AC_MSG_CHECKING([if want developer-level compiler pickyness])
-AC_ARG_ENABLE(picky,
-    AS_HELP_STRING([--enable-picky],[enable developer-level compiler pickyness when building PMI Shim (default: disabled, unless a .git directory is found in the build tree)]))
-if test "$enable_picky" = "yes"; then
-    AC_MSG_RESULT([yes])
-    WANT_PICKY_COMPILER=1
-else
-    AC_MSG_RESULT([no])
-    WANT_PICKY_COMPILER=0
-fi
-#################### Developer default override ####################
-if test "$WANT_PICKY_COMPILER" = "0" && test -z "$enable_picky" && test "$PMISHIM_DEVEL" = 1; then
-    WANT_PICKY_COMPILER=1
-    echo "--> developer override: enable picky compiler by default"
-fi
-#################### Developer default override ####################
-
-#
-# Developer debugging
-#
-AC_MSG_CHECKING([if want developer-level debugging code])
-AC_ARG_ENABLE(debug,
-    AS_HELP_STRING([--enable-debug],[enable developer-level debugging code (not for general users!) (default: disabled)]))
-if test "$enable_debug" = "yes" || test "$PMISHIM_DEVEL" = "1"; then
-    AC_MSG_RESULT([yes])
-    WANT_DEBUG=1
-else
-    AC_MSG_RESULT([no])
-    WANT_DEBUG=0
-fi
-
-
-if test "$WANT_DEBUG" = "0"; then
-    CFLAGS="-DNDEBUG $CFLAGS"
-    CXXFLAGS="-DNDEBUG $CXXFLAGS"
-else
-    CFLAGS="-DDEBUG -g $CFLAGS"
-    CXXFLAGS="-DDEBUG -g $CXXFLAGS"
-fi
-AC_DEFINE_UNQUOTED(PMISHIM_ENABLE_DEBUG, $WANT_DEBUG,
-    [Whether we want developer-level debugging code or not])
-
-AC_ARG_ENABLE(debug-symbols,
-    AS_HELP_STRING([--disable-debug-symbols],[Disable adding compiler flags to enable debugging symbols if --enable-debug is specified.  For non-debugging builds, this flag has no effect.]))
-
-
+pmishim_show_title "Checking for PMIx"
 PMISHIM_CHECK_PMIX
-
 
 ############################################################################
 # Libtool: part one
@@ -246,6 +230,8 @@ PMISHIM_CHECK_PMIX
 #
 # Part one of libtool magic.  Default to: enable shared, disable static.
 #
+
+pmishim_show_title "Setup libtool"
 
 AC_ENABLE_SHARED([])
 #AC_ENABLE_STATIC([])
@@ -257,7 +243,7 @@ LT_LANG([C])
 
 # final compiler config
 ############################################################################
-pmishim_show_subtitle "Compiler flags"
+pmishim_show_title "Compiler flags"
 
 #
 # This is needed for VPATH builds, so that it will -I the appropriate
@@ -282,9 +268,9 @@ if test "$PMISHIM_TOP_BUILDDIR" != "$PMISHIM_TOP_SRCDIR"; then
 else
     CPP_INCLUDES='-I$(top_srcdir) -I$(top_srcdir)/src/include'" $CPPFLAGS"
 fi
-CPPFLAGS="$CPP_INCLUDES $CPPFLAGS $pmix_CPPFLAGS"
-LDFLAGS="$LDFLAGS $pmix_LDFLAGS"
-LIBS="$LIBS $pmix_LIBS"
+CPPFLAGS="$CPP_INCLUDES $CPPFLAGS $pmishim_CPPFLAGS"
+LDFLAGS="$LDFLAGS $pmishim_LDFLAGS"
+LIBS="$LIBS $pmishim_LIBS"
 
 #
 # Delayed the substitution of CFLAGS and CXXFLAGS until now because
@@ -317,4 +303,5 @@ AC_MSG_RESULT([$LIBS])
 pmishim_show_title "Configuration complete"
 
 AC_OUTPUT
+PMISHIM_SUMMARY_PRINT
 

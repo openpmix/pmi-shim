@@ -19,8 +19,18 @@ ACLOCAL_AMFLAGS = -I ./config
 # dist", so we have to include config/distscript.sh.
 #
 EXTRA_DIST = \
-        README.md VERSION COPYING AUTHORS \
-        config/pmishim_get_version.sh
+        NEWS README.md VERSION autogen.sh \
+    	config/pmishim_get_version.sh
+
+
+headers =
+sources =
+nodist_headers =
+dist_pmishimdata_DATA =
+nobase_pmishim_HEADERS = \
+	src/include/pmishim_config.h \
+	src/include/pmishim_config_bottom.h
 
 SUBDIRS = include src
 
+nobase_pmishim_HEADERS += $(headers)
