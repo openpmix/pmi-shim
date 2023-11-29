@@ -1,0 +1,19 @@
+Copyright (c) 2023      Nanook Consulting.  All rights reserved.
+$COPYRIGHT$
+
+Additional copyrights may follow
+
+$HEADER$
+
+===========================================================================
+
+This file contains the main features as well as overviews of specific
+bug fixes (and other actions) for each version of the PMI shim since
+version 1.0.
+
+
+1.0.0
+------
+Initial public release of the PMI shim. Tested against OpenMPI's legacy
+PMI-1 and PMI-2 components. Also tested using MPICH head of "main" branch
+as of release date for this package.

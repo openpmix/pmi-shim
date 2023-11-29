@@ -89,11 +89,11 @@ AC_DEFUN([PMISHIM_CHECK_PMIX],[
                        AC_MSG_ERROR([Cannot continue])])])])
 
         AS_IF([test "$pmix_ext_install_dir" != "/usr"],
-              [pmix_CPPFLAGS="-I$pmix_ext_install_dir/include"
-               pmix_LDFLAGS="-L$pmix_ext_install_libdir"],
-               [pmix_CPPFLAGS=""
-                pmix_LDFLAGS=""])
-        pmix_LIBS=-lpmix
+              [pmishim_CPPFLAGS="-I$pmix_ext_install_dir/include"
+               pmishim_LDFLAGS="-L$pmix_ext_install_libdir"],
+               [pmishim_CPPFLAGS=""
+                pmishim_LDFLAGS=""])
+        pmishim_LIBS=-lpmix
 
     fi
 

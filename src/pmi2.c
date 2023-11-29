@@ -55,7 +55,6 @@ PMISHIM_EXPORT int PMI2_Init(int *spawned, int *size, int *rank, int *appnum)
     pmix_proc_t proc = myproc;
     proc.rank = PMIX_RANK_WILDCARD;
 
-fprintf(stderr, "PMI2_INIT\n");
     if (PMIX_SUCCESS != (rc = PMIx_Init(&myproc, NULL, 0))) {
         /* if we didn't see a PMIx server (e.g., missing envar),
          * then allow us to run as a singleton */
@@ -573,7 +572,7 @@ PMISHIM_EXPORT int PMI2_Info_GetJobAttr(const char name[], char value[], int val
 
     /* PMI-2 expects resource manager to set
      * process mapping in ANL notation. */
-    if (!strcmp(name, ANL_MAPPING)) {
+    if (0 == strcmp(name, ANL_MAPPING)) {
         /* we are looking in the job-data. If there is nothing there
          * we don't want to look in rank's data, thus set rank to widcard */
         proc = myproc;
